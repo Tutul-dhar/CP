@@ -1,0 +1,162 @@
+problem link: https://www.codechef.com/problems/BUILDT?tab=statement
+
+
+//....................... ॐ नमः शिवाय.......................  //
+#include<bits/stdc++.h>
+#include<iostream>
+#include<set>
+#include<map>
+#include<iterator>
+#include <ext/pb_ds/assoc_container.hpp>
+#include <ext/pb_ds/tree_policy.hpp>
+
+///Defines.....
+#define ll              long long
+#define pb              push_back
+#define RIP(i,n)        for(ll i=0; i<n; i++)
+#define PI              acos(-1)
+#define nl              '\n'
+
+
+using namespace std;
+using namespace __gnu_pbds;
+typedef tree<ll, null_type, less<ll>, rb_tree_tag,tree_order_statistics_node_update> ordered_set;
+
+
+///Constants........
+const ll mod = 1e9+7;
+//const int mod = 998244353;
+const int N = 2e5 + 5;
+const ll Max = 2*1e6+5;
+const ll inf = 1e18+5;
+
+
+///Chess moves.........
+ int dx[] = {+0, +0, -1, +1}; ///Up-down, Left-Right
+ int dy[] = {+1, -1, +0, +0};
+// int dx[] = {+0,+0,+1,-1,-1,+1,-1,+1}; ///King's Move
+//int dy[] = {-1,+1,+0,+0,+1,+1,-1,-1};
+// int dx[] = {-2, -2, -1, -1,  1,  1,  2,  2}; ///Knight's Move
+// int dy[] = {-1,  1, -2,  2, -2,  2, -1,  1};
+
+inline void norm(ll &a) {a%=mod; (a<0) && (a+=mod) ;}
+inline ll modAdd(ll a,ll b) {a%=mod, b%=mod; norm(a),norm(b); return (a+b)%mod;}
+inline ll modSub(ll a,ll b) {a%=mod, b%=mod; norm(a),norm(b); return (a-b)%mod;}
+inline ll modMul(ll a,ll b) {a%=mod, b%=mod; norm(a),norm(b); return (a*b)%mod;}
+inline ll modpow(ll a,ll p) {ll ans=1;while(p){if(p%2)ans=(ans*a)%mod;a=(a*a)%mod;p/=2;} return ans;}
+
+///Functions..........
+ll bigmod(ll a, ll p, ll M)
+{
+    p %= (M-1);
+    ll result = 1LL;
+    while(p>0LL){
+        if((p&1LL)) result = (result * a) % M;
+        a = (a * a) % M;
+        p>>=1LL;
+
+    }
+    return result;
+}
+
+ll gcd(ll a, ll b){ while (b){ a %= b; swap(a, b);} return a;}
+ll lcm(ll a,ll b){ return (a/gcd(a, b)*b);}
+
+ll inverse(ll a, ll M){
+    return bigmod(a, M-2, M) % M;
+}
+ll ncr(ll a, ll b){ ll x = max(a-b, b), ans=1; for(ll K=a, L=1; K>=x+1; K--, L++){ ans = ans * K % mod; ans = ans * inverse(L, mod) % mod;} return ans;}
+ll ncrwithk(ll n,ll k){if(k>n-k) k=n-k;ll p=1,pp=1;if(k!=0){while(k){p*=n;pp*=k;ll m=__gcd(p,pp);p/=m;pp/=m;n--;k--;}}else p=1;return p;}
+ll fact[Max];
+ll ncr_mod(ll n,ll r) {if(n < r || r < 0) return 0;return (((fact[n]*inverse(fact[r], mod))%mod)*inverse(fact[n-r], mod))%mod;}
+void fac() {fact[0] = 1; for(ll i = 1; i < Max; i++) fact[i] = (i*fact[i-1])%mod;}
+
+
+            /********************************* Let's Start *********************************/
+/*
+   Topological Sorting.....
+*/
+ll fact1[Max],infact[Max],sub[200100],a[200100];
+vector<ll> g[200100];
+void pre() {
+    fact1[0] = 1;
+    infact[0] = 1;
+    for(ll i = 1; i < Max; i++) {
+        fact1[i] = (fact1[i-1] * i)%mod;
+    }
+    infact[Max - 1] = bigmod(fact1[Max - 1],mod-2,mod);
+    for(ll i = Max-2; i > 0; i--) {
+        infact[i] = (infact[i+1] * (i+1))%mod;
+    }
+}
+
+void dfs1(ll node,ll par = -1) {
+    sub[node] = a[node];
+    for(ll ch : g[node]) {
+        if(ch != par) {
+            dfs1(ch,node);
+            sub[node] += sub[ch];
+        }
+    }
+}
+
+pair<ll,ll> dfs(ll node,ll par = -1) {
+    if(sub[node] == 0) return {1,0};
+    ll ch = 0;
+    for(ll e : g[node]) {
+        if(e != par) ch++;
+    }
+    if(ch == 0) return {1,a[node] + 1};
+    ll prod1 = 1,tot = 0,inv = infact[a[node]];
+    for(ll e : g[node]) {
+        if(e != par) {
+            auto it = dfs(e,node);
+            prod1 *= it.first;
+            tot += it.second;
+            inv *= infact[it.second];
+            prod1 %= mod;
+            inv %= mod;
+        }
+    }
+
+    prod1 *= fact1[tot + a[node]];
+    prod1 %= mod;
+    prod1 = (prod1 * inv)%mod;
+    tot += a[node] + 1;
+
+    return {prod1,tot};
+}
+
+void solve() {
+    ll n;
+    cin >> n;
+    for(ll i = 1; i <= n; i++) {
+        cin >> a[i];
+        sub[i] = 0;
+        if(g[i].size()) g[i].clear();
+    }
+
+    ll u,v;
+    RIP(i,n-1) {
+        cin >> u >> v;
+        g[u].pb(v);
+        g[v].pb(u);
+    }
+
+    dfs1(1);
+
+    cout << dfs(1).first << nl;
+}
+
+
+
+int32_t main() {
+    ios_base::sync_with_stdio(0), cin.tie(0);
+    int t = 1;
+
+    cin >> t;
+    pre();
+    while(t--) {
+        solve();
+    }
+}
