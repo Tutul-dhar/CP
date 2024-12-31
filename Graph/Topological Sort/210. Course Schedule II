@@ -1,0 +1,32 @@
+Problem Link : https://leetcode.com/problems/course-schedule-ii/?envType=problem-list-v2&envId=graph&difficulty=MEDIUM
+
+class Solution {
+public:
+    vector<int> findOrder(int numCourses, vector<vector<int>>& prerequisites) {
+        int inDegree[numCourses];
+        vector<int> g[numCourses];
+        vector<int> topoSort;
+        queue<int> q;
+        memset(inDegree,0,sizeof inDegree);
+        for(auto it : prerequisites) {
+            inDegree[it[0]]++;
+            g[it[1]].push_back(it[0]);
+        }
+        for(int i = 0; i < numCourses; i++) {
+            if(inDegree[i] == 0) q.push(i);
+        }
+
+        while(!q.empty()) {
+            int node = q.front();
+            q.pop();
+            topoSort.push_back(node);
+            for(int ch : g[node]) {
+                inDegree[ch]--;
+                if(inDegree[ch] == 0) q.push(ch);
+            }
+        }
+
+        if(topoSort.size() < numCourses) return {};
+        return topoSort;
+    }
+};
